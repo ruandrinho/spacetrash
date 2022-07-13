@@ -2,6 +2,7 @@ import time
 import asyncio
 import curses
 from random import randint, choice
+from itertools import cycle
 
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
@@ -98,32 +99,20 @@ def get_frame_size(text):
 async def animate_spaceship(canvas, start_row, start_column, frame1, frame2,
                             speed=1):
     global rows_direction, columns_direction
-    frame_counter = 0
     rows, columns = canvas.getmaxyx()
     height, width = get_frame_size(frame1)
-    while True:
-        if frame_counter % 4 < 2:
-            negative_frame = frame1
-            positive_frame = frame2
-        else:
-            negative_frame = frame2
-            positive_frame = frame1
-        frame_counter += 1
-        draw_frame(canvas, start_row, start_column, negative_frame,
+    for frame in cycle([frame2, frame2, frame1, frame1]):
+        draw_frame(canvas, start_row, start_column, frame1,
                    negative=True)
-        draw_frame(canvas, start_row, start_column, positive_frame,
+        draw_frame(canvas, start_row, start_column, frame2,
                    negative=True)
         start_row += rows_direction * speed
         start_column += columns_direction * speed
-        if start_row < 1:
-            start_row = 1
-        if start_row + height > rows - 1:
-            start_row = rows - 1 - height
-        if start_column < 1:
-            start_column = 1
-        if start_column + width > columns - 1:
-            start_column = columns - 1 - width
-        draw_frame(canvas, start_row, start_column, positive_frame)
+        start_row = max(1, start_row)
+        start_row = min(rows - 1 - height, start_row)
+        start_column = max(1, start_column)
+        start_column = min(columns - 1 - width, start_column)
+        draw_frame(canvas, start_row, start_column, frame)
         await asyncio.sleep(0)
 
 
@@ -190,7 +179,7 @@ def draw(canvas):
     rocket_frame_2 = load_animation('rocket_frame_2')
     coroutines = []
     coords_cache = [(0, 0)]
-    for i in range(200):
+    for _ in range(200):
         y, x = 0, 0
         while (y, x) in coords_cache:
             y, x = randint(2, rows - 2), randint(2, columns - 2)
@@ -210,7 +199,7 @@ def draw(canvas):
         canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
-        if len(coroutines) == 0:
+        if not coroutines:
             break
 
 
