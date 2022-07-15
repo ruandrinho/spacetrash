@@ -102,10 +102,6 @@ async def animate_spaceship(canvas, start_row, start_column, frame1, frame2,
     rows, columns = canvas.getmaxyx()
     height, width = get_frame_size(frame1)
     for frame in cycle([frame2, frame2, frame1, frame1]):
-        draw_frame(canvas, start_row, start_column, frame1,
-                   negative=True)
-        draw_frame(canvas, start_row, start_column, frame2,
-                   negative=True)
         start_row += rows_direction * speed
         start_column += columns_direction * speed
         start_row = max(1, start_row)
@@ -114,6 +110,8 @@ async def animate_spaceship(canvas, start_row, start_column, frame1, frame2,
         start_column = min(columns - 1 - width, start_column)
         draw_frame(canvas, start_row, start_column, frame)
         await asyncio.sleep(0)
+        draw_frame(canvas, start_row, start_column, frame,
+                   negative=True)
 
 
 async def fire(canvas, start_row, start_column, rows_speed=-0.3,
