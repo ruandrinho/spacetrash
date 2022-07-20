@@ -1,9 +1,19 @@
 import asyncio
 import curses
-from random import randint
+from random import randint, choice
 from itertools import cycle
-from frame_tools import get_frame_size, draw_frame
+from frame_tools import get_frame_size, draw_frame, load_frame
 import global_vars
+
+
+async def fill_orbit_with_garbage(canvas, columns):
+    while True:
+        frame = load_frame(choice(['trash_small', 'trash_large', 'trash_xl']))
+        global_vars.coroutines.append(
+            fly_garbage(canvas, randint(2, columns - 2), frame)
+        )
+        for _ in range(randint(5, 20)):
+            await asyncio.sleep(0)
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):

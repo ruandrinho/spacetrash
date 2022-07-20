@@ -1,3 +1,8 @@
+def load_frame(model):
+    with open(f'frames/{model}.txt') as file:
+        return file.read()
+
+
 def draw_frame(canvas, start_row, start_column, text, negative=False):
     """
     Draw multiline text fragment on canvas,

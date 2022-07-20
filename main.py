@@ -2,16 +2,20 @@ import time
 import curses
 from random import randint, choice
 from control_tools import read_controls
-from animations import blink, fire, animate_spaceship, fly_garbage
+from animations import blink, fire, animate_spaceship
+from animations import fill_orbit_with_garbage
+from frame_tools import load_frame
 import global_vars
 
 
 TIC_TIMEOUT = 0.1
 
 
-def load_frame(model):
-    with open(f'frames/{model}.txt') as file:
-        return file.read()
+def print_on_canvas(canvas, row, column, *args):
+    output = ''
+    for arg in args:
+        output += str(arg)
+    canvas.addstr(row, column, output)
 
 
 def draw(canvas):
@@ -22,31 +26,31 @@ def draw(canvas):
     rows, columns = canvas.getmaxyx()
     rocket_frame_1 = load_frame('rocket_frame_1')
     rocket_frame_2 = load_frame('rocket_frame_2')
-    garbage_frame = load_frame('trash_large')
-    coroutines = []
     coords_cache = [(0, 0)]
     for _ in range(200):
         y, x = 0, 0
         while (y, x) in coords_cache:
             y, x = randint(2, rows - 2), randint(2, columns - 2)
         coords_cache.append((y, x))
-        coroutines.append(blink(canvas, y, x, choice('+*.:')))
-    coroutines.append(fire(canvas, rows / 2, columns / 2))
-    coroutines.append(animate_spaceship(canvas, rows//2 - 1, columns//2 - 2,
-                                        rocket_frame_1, rocket_frame_2))
-    coroutines.append(fly_garbage(canvas, 10, garbage_frame))
+        global_vars.coroutines.append(blink(canvas, y, x, choice('+*.:')))
+    # global_vars.coroutines.append(fire(canvas, rows / 2, columns / 2))
+    global_vars.coroutines.append(
+        animate_spaceship(canvas, rows//2 - 1, columns//2 - 2,
+                          rocket_frame_1, rocket_frame_2))
+    global_vars.coroutines.append(fill_orbit_with_garbage(canvas, columns))
     while True:
         global_vars.rows_direction, global_vars.columns_direction,\
             global_vars.space_pressed = read_controls(canvas)
-        for coroutine in coroutines.copy():
+        for coroutine in global_vars.coroutines.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
-                coroutines.remove(coroutine)
+                global_vars.coroutines.remove(coroutine)
         canvas.border()
+        print_on_canvas(canvas, 2, 2, len(global_vars.coroutines))
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
-        if not coroutines:
+        if not global_vars.coroutines:
             break
 
 
