@@ -5,6 +5,7 @@ from itertools import cycle
 from frame_tools import get_frame_size, draw_frame, load_frame
 from physics import update_speed
 from obstacles import Obstacle
+from explosion import explode
 import global_vars
 
 
@@ -42,6 +43,9 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         global_vars.obstacles.remove(obstacle)
         for injured in global_vars.obstacles_in_last_collision:
             if obstacle == injured:
+                global_vars.coroutines.append(
+                    explode(canvas, row + height/2, column + width/2)
+                )
                 return
         row += speed
 

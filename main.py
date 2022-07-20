@@ -38,12 +38,11 @@ def draw(canvas):
         run_spaceship(canvas, rows//2 - 1, columns//2 - 2, rocket_frame_1,
                       rocket_frame_2))
     global_vars.coroutines.append(fill_orbit_with_garbage(canvas, columns))
-    global_vars.coroutines.append(
-        show_obstacles(canvas, global_vars.obstacles))
+    # global_vars.coroutines.append(
+    #     show_obstacles(canvas, global_vars.obstacles))
     while True:
         global_vars.rows_direction, global_vars.columns_direction,\
             global_vars.space_pressed = read_controls(canvas)
-        # global_vars.obstacles = []
         for coroutine in global_vars.coroutines.copy():
             try:
                 coroutine.send(None)
