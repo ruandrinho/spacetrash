@@ -11,8 +11,8 @@ async def count_year():
 
 
 async def print_game_state(canvas):
-    rows, columns = canvas.getmaxyx()
-    subcanvas = canvas.derwin(3, 48, rows - 3, 0)
+    canvas_height, canvas_width = canvas.getmaxyx()
+    subcanvas = canvas.derwin(3, 48, canvas_height - 3, 0)
     while True:
         caption = f'{global_vars.year} {get_caption_by_year(global_vars.year)}'
         subcanvas.addstr(1, 2, caption)
