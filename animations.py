@@ -14,6 +14,15 @@ async def sleep(tics=1):
         await asyncio.sleep(0)
 
 
+async def show_gameover(canvas):
+    frame = load_frame('gameover')
+    rows, columns = canvas.getmaxyx()
+    height, width = get_frame_size(frame)
+    while True:
+        draw_frame(canvas, rows/2 - height/2, columns/2 - width/2, frame)
+        await asyncio.sleep(0)
+
+
 async def fill_orbit_with_garbage(canvas, columns):
     while True:
         frame = load_frame(choice(['trash_small', 'trash_large', 'trash_xl']))
@@ -53,6 +62,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 async def run_spaceship(canvas, start_row, start_column, frame1, frame2,
                         row_speed=0, column_speed=0):
     rows, columns = canvas.getmaxyx()
+    row, column = start_row, start_column
     height, width = get_frame_size(frame1)
     for frame in cycle([frame2, frame1]):
         if global_vars.space_pressed:
@@ -62,16 +72,22 @@ async def run_spaceship(canvas, start_row, start_column, frame1, frame2,
         row_speed, column_speed = update_speed(
             row_speed, column_speed, global_vars.rows_direction,
             global_vars.columns_direction, 5, 10)
-        start_row += row_speed
-        start_column += column_speed
-        start_row = max(1, start_row)
-        start_row = min(rows - 1 - height, start_row)
-        start_column = max(1, start_column)
-        start_column = min(columns - 1 - width, start_column)
-        draw_frame(canvas, start_row, start_column, frame)
+        row += row_speed
+        column += column_speed
+        row = max(1, row)
+        row = min(rows - 1 - height, row)
+        column = max(1, column)
+        column = min(columns - 1 - width, column)
+        draw_frame(canvas, row, column, frame)
         await sleep(2)
-        draw_frame(canvas, start_row, start_column, frame,
+        draw_frame(canvas, row, column, frame,
                    negative=True)
+        for obstacle in global_vars.obstacles:
+            if obstacle.has_collision(round(row), round(column),
+                                      height, width):
+                global_vars.obstacles_in_last_collision.append(obstacle)
+                global_vars.coroutines.append(show_gameover(canvas))
+                return
 
 
 async def fire(canvas, start_row, start_column, rows_speed=-0.3,
