@@ -2,7 +2,7 @@ import time
 import curses
 from random import randint, choice
 from control_tools import read_controls
-from animations import blink, fire, animate_spaceship
+from animations import blink, fire, run_spaceship
 from animations import fill_orbit_with_garbage
 from frame_tools import load_frame
 import global_vars
@@ -35,8 +35,8 @@ def draw(canvas):
         global_vars.coroutines.append(blink(canvas, y, x, choice('+*.:')))
     # global_vars.coroutines.append(fire(canvas, rows / 2, columns / 2))
     global_vars.coroutines.append(
-        animate_spaceship(canvas, rows//2 - 1, columns//2 - 2,
-                          rocket_frame_1, rocket_frame_2))
+        run_spaceship(canvas, rows//2 - 1, columns//2 - 2, rocket_frame_1,
+                      rocket_frame_2))
     global_vars.coroutines.append(fill_orbit_with_garbage(canvas, columns))
     while True:
         global_vars.rows_direction, global_vars.columns_direction,\

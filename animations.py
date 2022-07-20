@@ -38,11 +38,15 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         row += speed
 
 
-async def animate_spaceship(canvas, start_row, start_column, frame1, frame2,
-                            row_speed=0, column_speed=0):
+async def run_spaceship(canvas, start_row, start_column, frame1, frame2,
+                        row_speed=0, column_speed=0):
     rows, columns = canvas.getmaxyx()
     height, width = get_frame_size(frame1)
     for frame in cycle([frame2, frame1]):
+        if global_vars.space_pressed:
+            global_vars.coroutines.append(
+                fire(canvas, start_row, start_column + width//2)
+            )
         row_speed, column_speed = update_speed(
             row_speed, column_speed, global_vars.rows_direction,
             global_vars.columns_direction, 5, 10)
