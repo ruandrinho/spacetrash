@@ -6,6 +6,7 @@ from frame_tools import get_frame_size, draw_frame, load_frame
 from physics import update_speed
 from obstacles import Obstacle
 from explosion import explode
+from game_scenario import get_garbage_delay_tics
 import global_vars
 
 
@@ -25,11 +26,15 @@ async def show_gameover(canvas):
 
 async def fill_orbit_with_garbage(canvas, columns):
     while True:
+        garbage_delay_tics = get_garbage_delay_tics(global_vars.year)
+        if not garbage_delay_tics:
+            await sleep(15)
+            continue
         frame = load_frame(choice(['trash_small', 'trash_large', 'trash_xl']))
         global_vars.coroutines.append(
             fly_garbage(canvas, randint(2, columns - 2), frame)
         )
-        await sleep(randint(5, 20))
+        await sleep(garbage_delay_tics)
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
@@ -65,7 +70,7 @@ async def run_spaceship(canvas, start_row, start_column, frame1, frame2,
     row, column = start_row, start_column
     height, width = get_frame_size(frame1)
     for frame in cycle([frame2, frame1]):
-        if global_vars.space_pressed:
+        if global_vars.space_pressed and global_vars.year >= 2020:
             global_vars.coroutines.append(
                 fire(canvas, start_row, start_column + width//2)
             )

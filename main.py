@@ -2,10 +2,9 @@ import time
 import curses
 from random import randint, choice
 from control_tools import read_controls
-from animations import blink, run_spaceship
-from animations import fill_orbit_with_garbage
+from animations import blink, run_spaceship, fill_orbit_with_garbage
 from frame_tools import load_frame
-from obstacles import show_obstacles
+from game_state import count_year, print_game_state
 import global_vars
 
 
@@ -38,6 +37,8 @@ def draw(canvas):
         run_spaceship(canvas, rows//2 - 1, columns//2 - 2, rocket_frame_1,
                       rocket_frame_2))
     global_vars.coroutines.append(fill_orbit_with_garbage(canvas, columns))
+    global_vars.coroutines.append(count_year())
+    global_vars.coroutines.append(print_game_state(canvas))
     # global_vars.coroutines.append(
     #     show_obstacles(canvas, global_vars.obstacles))
     while True:
