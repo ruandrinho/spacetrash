@@ -2,9 +2,10 @@ import time
 import curses
 from random import randint, choice
 from control_tools import read_controls
-from animations import blink, fire, run_spaceship
+from animations import blink, run_spaceship
 from animations import fill_orbit_with_garbage
 from frame_tools import load_frame
+from obstacles import show_obstacles
 import global_vars
 
 
@@ -33,21 +34,23 @@ def draw(canvas):
             y, x = randint(2, rows - 2), randint(2, columns - 2)
         coords_cache.append((y, x))
         global_vars.coroutines.append(blink(canvas, y, x, choice('+*.:')))
-    # global_vars.coroutines.append(fire(canvas, rows / 2, columns / 2))
     global_vars.coroutines.append(
         run_spaceship(canvas, rows//2 - 1, columns//2 - 2, rocket_frame_1,
                       rocket_frame_2))
     global_vars.coroutines.append(fill_orbit_with_garbage(canvas, columns))
+    global_vars.coroutines.append(
+        show_obstacles(canvas, global_vars.obstacles))
     while True:
         global_vars.rows_direction, global_vars.columns_direction,\
             global_vars.space_pressed = read_controls(canvas)
+        # global_vars.obstacles = []
         for coroutine in global_vars.coroutines.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
                 global_vars.coroutines.remove(coroutine)
         canvas.border()
-        print_on_canvas(canvas, 2, 2, len(global_vars.coroutines))
+        # print_on_canvas(canvas, 2, 2, len(global_vars.obstacles))
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
         if not global_vars.coroutines:

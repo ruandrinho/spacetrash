@@ -4,6 +4,7 @@ from random import randint, choice
 from itertools import cycle
 from frame_tools import get_frame_size, draw_frame, load_frame
 from physics import update_speed
+from obstacles import Obstacle
 import global_vars
 
 
@@ -33,8 +34,12 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
     while row < rows_number:
         draw_frame(canvas, row, column, garbage_frame)
+        height, width = get_frame_size(garbage_frame)
+        obstacle = Obstacle(row, column, height, width)
+        global_vars.obstacles.append(obstacle)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
+        global_vars.obstacles.remove(obstacle)
         row += speed
 
 
