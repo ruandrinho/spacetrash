@@ -40,6 +40,9 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         global_vars.obstacles.remove(obstacle)
+        for injured in global_vars.obstacles_in_last_collision:
+            if obstacle == injured:
+                return
         row += speed
 
 
@@ -91,6 +94,10 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3,
     curses.beep()
 
     while 0 < row < max_row and 0 < column < max_column:
+        for obstacle in global_vars.obstacles:
+            if obstacle.has_collision(round(row), round(column)):
+                global_vars.obstacles_in_last_collision.append(obstacle)
+                return
         canvas.addstr(round(row), round(column), symbol)
         await asyncio.sleep(0)
         canvas.addstr(round(row), round(column), ' ')
