@@ -24,17 +24,33 @@ def start_animations(canvas):
         while (y, x) in coords_cache:
             y, x = randint(2, canvas_height - 2), randint(2, canvas_width - 2)
         coords_cache.append((y, x))
-        global_vars.coroutines.append(blink(canvas, y, x, choice('+*.:')))
+        global_vars.coroutines.append(
+            blink(canvas, y, x, choice('+*.:'), offset_tics=randint(1, 20))
+        )
 
     global_vars.coroutines.append(
-        run_spaceship(canvas, canvas_height//2 - 1, canvas_width//2 - 2))
+        run_spaceship(
+            canvas,
+            canvas_height//2 - 1,
+            canvas_width//2 - 2,
+            load_frame('rocket_frame_1'),
+            load_frame('rocket_frame_2'),
+            load_frame('gameover')
+        )
+    )
 
+    garbage_frame_set = [
+        load_frame('trash_small'),
+        load_frame('trash_large'),
+        load_frame('trash_xl')
+    ]
     global_vars.coroutines.append(
-        fill_orbit_with_garbage(canvas))
+        fill_orbit_with_garbage(canvas, garbage_frame_set)
+    )
 
 
-async def blink(canvas, row, column, symbol='*'):
-    for _ in range(randint(1, 20)):
+async def blink(canvas, row, column, symbol='*', offset_tics=1):
+    for _ in range(offset_tics):
         await asyncio.sleep(0)
 
     while True:
@@ -51,23 +67,26 @@ async def blink(canvas, row, column, symbol='*'):
         await sleep(3)
 
 
-async def run_spaceship(canvas, row, column, row_speed=0,
-                        column_speed=0):
-    frame1 = load_frame('rocket_frame_1')
-    frame2 = load_frame('rocket_frame_2')
+async def run_spaceship(canvas, row, column, frame1, frame2, gameover_frame,
+                        row_speed=0, column_speed=0):
 
     canvas_height, canvas_width = canvas.getmaxyx()
     frame_height, frame_width = get_frame_size(frame1)
 
-    for frame in cycle([frame2, frame1]):
+    for frame in cycle([frame2, frame2, frame1, frame1]):
         if global_vars.space_pressed and global_vars.year >= 2020:
             global_vars.coroutines.append(
                 fire(canvas, row, column + frame_width//2)
             )
 
         row_speed, column_speed = update_speed(
-            row_speed, column_speed, global_vars.rows_direction,
-            global_vars.columns_direction, 5, 10)
+            row_speed,
+            column_speed,
+            global_vars.rows_direction,
+            global_vars.columns_direction,
+            row_speed_limit=5,
+            column_speed_limit=10
+        )
         row += row_speed
         column += column_speed
         row = max(1, row)
@@ -76,18 +95,24 @@ async def run_spaceship(canvas, row, column, row_speed=0,
         column = min(canvas_width - 1 - frame_width, column)
 
         draw_frame(canvas, row, column, frame)
-        await sleep(2)
+        await asyncio.sleep(0)
         draw_frame(canvas, row, column, frame, negative=True)
 
         for obstacle in global_vars.obstacles:
-            if obstacle.has_collision(round(row), round(column),
-                                      frame_height, frame_width):
+            if obstacle.has_collision(
+                round(row),
+                round(column),
+                frame_height,
+                frame_width
+            ):
                 global_vars.obstacles_in_last_collision.append(obstacle)
-                global_vars.coroutines.append(show_gameover(canvas))
+                global_vars.coroutines.append(
+                    show_gameover(canvas, gameover_frame)
+                )
                 return
 
 
-async def fill_orbit_with_garbage(canvas):
+async def fill_orbit_with_garbage(canvas, frame_set):
     canvas_height, canvas_width = canvas.getmaxyx()
 
     while True:
@@ -97,16 +122,18 @@ async def fill_orbit_with_garbage(canvas):
             continue
 
         global_vars.coroutines.append(
-            fly_garbage(canvas, randint(2, canvas_width - 2))
+            fly_garbage(
+                canvas,
+                randint(2, canvas_width - 2),
+                choice(frame_set)
+            )
         )
         await sleep(garbage_delay_tics)
 
 
-async def fly_garbage(canvas, column, speed=0.5):
+async def fly_garbage(canvas, column, frame, speed=0.5):
     """Animate garbage, flying from top to bottom.
     Сolumn position will stay same, as specified on start."""
-
-    frame = load_frame(choice(['trash_small', 'trash_large', 'trash_xl']))
 
     canvas_height, canvas_width = canvas.getmaxyx()
 
@@ -129,8 +156,11 @@ async def fly_garbage(canvas, column, speed=0.5):
         for injured in global_vars.obstacles_in_last_collision:
             if obstacle == injured:
                 global_vars.coroutines.append(
-                    explode(canvas, row + frame_height/2,
-                            column + frame_width/2)
+                    explode(
+                        canvas,
+                        row + frame_height/2,
+                        column + frame_width/2
+                    )
                 )
                 return
 
@@ -171,12 +201,15 @@ async def fire(canvas, row, column, rows_speed=-0.3, columns_speed=0):
         column += columns_speed
 
 
-async def show_gameover(canvas):
-    frame = load_frame('gameover')
+async def show_gameover(canvas, frame):
     canvas_height, canvas_width = canvas.getmaxyx()
     frame_height, frame_width = get_frame_size(frame)
 
     while True:
-        draw_frame(canvas, canvas_height/2 - frame_height/2,
-                   canvas_width/2 - frame_width/2, frame)
+        draw_frame(
+            canvas,
+            canvas_height/2 - frame_height/2,
+            canvas_width/2 - frame_width/2,
+            frame
+        )
         await asyncio.sleep(0)
