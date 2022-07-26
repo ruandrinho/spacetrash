@@ -4,7 +4,7 @@ from random import randint, choice
 from itertools import cycle
 from frame_tools import get_frame_size, draw_frame, load_frame
 from physics import update_speed
-from obstacles import Obstacle
+from obstacles import Obstacle, show_obstacles
 from explosion import explode
 from game_scenario import get_garbage_delay_tics
 import global_vars
@@ -46,6 +46,10 @@ def start_animations(canvas):
     ]
     global_vars.coroutines.append(
         fill_orbit_with_garbage(canvas, garbage_frame_set)
+    )
+    # Uncomment to show borders of obstacles for debugging
+    global_vars.coroutines.append(
+        show_obstacles(canvas, global_vars.obstacles_in_last_collision)
     )
 
 
@@ -162,6 +166,7 @@ async def fly_garbage(canvas, column, frame, speed=0.5):
                         column + frame_width/2
                     )
                 )
+                global_vars.obstacles_in_last_collision.remove(injured)
                 return
 
         row += speed
@@ -190,7 +195,8 @@ async def fire(canvas, row, column, rows_speed=-0.3, columns_speed=0):
     while 0 < row < max_row and 0 < column < max_column:
         for obstacle in global_vars.obstacles:
             if obstacle.has_collision(round(row), round(column)):
-                global_vars.obstacles_in_last_collision.append(obstacle)
+                if obstacle not in global_vars.obstacles_in_last_collision:
+                    global_vars.obstacles_in_last_collision.append(obstacle)
                 return
 
         canvas.addstr(round(row), round(column), symbol)
